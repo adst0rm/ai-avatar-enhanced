@@ -1,18 +1,31 @@
 import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
+import { useCamera } from "../hooks/useCamera";
 import { VoiceRecognition } from "./VoiceRecognition";
 
 export const ClassroomUI = ({ hidden, ...props }) => {
     const input = useRef();
     const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+    const {
+        isVideoOn,
+        hasPermission,
+        error: cameraError,
+        isSupported: isCameraSupported,
+        devices: cameraDevices,
+        isLoading: isCameraLoading,
+        videoRef,
+        toggleCamera,
+        switchCamera,
+        clearError
+    } = useCamera();
+
     const [isMuted, setIsMuted] = useState(false);
-    const [isVideoOn, setIsVideoOn] = useState(true);
     const [isHandRaised, setIsHandRaised] = useState(false);
     const [showParticipants, setShowParticipants] = useState(false);
     const [showChat, setShowChat] = useState(true);
-    const [currentLesson, setCurrentLesson] = useState("Introduction to Physics");
     const [isVoiceActive, setIsVoiceActive] = useState(false);
+    const [showCameraSettings, setShowCameraSettings] = useState(false);
     const voiceRecognitionRef = useRef();
 
     const sendMessage = (text = null) => {
@@ -65,15 +78,29 @@ export const ClassroomUI = ({ hidden, ...props }) => {
         }
     }, [loading, message]);
 
+    // Close camera settings when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showCameraSettings && !event.target.closest('.camera-settings-container')) {
+                setShowCameraSettings(false);
+            }
+        };
+
+        if (showCameraSettings) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showCameraSettings]);
+
     if (hidden) {
         return null;
     }
 
     const participants = [
-        { id: 1, name: "Dr. Sarah Wilson", role: "Instructor", avatar: "👩‍🏫", isOnline: true },
-        { id: 2, name: "Alex Chen", role: "Student", avatar: "👨‍🎓", isOnline: true },
-        { id: 3, name: "Maria Garcia", role: "Student", avatar: "👩‍🎓", isOnline: true },
-        { id: 4, name: "James Kim", role: "Student", avatar: "👨‍🎓", isOnline: false },
+        { id: 1, name: "Sarah Wilson", role: "Host", avatar: "👩‍💼", isOnline: true },
+        { id: 2, name: "Alex Chen", role: "Participant", avatar: "👨‍💻", isOnline: true },
+        { id: 3, name: "Maria Garcia", role: "Participant", avatar: "👩‍💻", isOnline: true },
+        { id: 4, name: "James Kim", role: "Participant", avatar: "👨‍💼", isOnline: false },
     ];
 
     return (
@@ -91,8 +118,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                             <span className="font-bold">EduVerse</span>
                         </Link>
                         <div className="text-gray-300">
-                            <span className="text-sm">Current Lesson:</span>
-                            <span className="ml-2 font-semibold text-white">{currentLesson}</span>
+                            <span className="text-sm">Video Conference</span>
                         </div>
                     </div>
 
@@ -113,6 +139,119 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                         {/* 3D Classroom Viewport */}
                         <div className="flex-1 relative bg-black">
                             {props.children}
+
+                            {/* User Camera Display */}
+                            <div className="absolute top-4 left-4 z-20">
+                                <div className="relative camera-settings-container">
+                                    {isCameraLoading ? (
+                                        <div className="w-48 h-36 bg-gray-800 rounded-lg border-2 border-blue-500 shadow-lg flex items-center justify-center">
+                                            <div className="text-center text-gray-300">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+                                                <div className="text-xs">Starting Camera...</div>
+                                            </div>
+                                        </div>
+                                    ) : isVideoOn ? (
+                                        <div className="w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-green-500 shadow-lg">
+                                            <video
+                                                ref={videoRef}
+                                                autoPlay
+                                                playsInline
+                                                muted
+                                                className="w-full h-full object-cover scale-x-[-1]" // Mirror effect
+                                                onLoadedMetadata={() => {
+                                                    // Ensure video plays when metadata is loaded
+                                                    if (videoRef.current) {
+                                                        videoRef.current.play().catch(console.error);
+                                                    }
+                                                }}
+                                                onError={(e) => {
+                                                    console.error('[Camera] Video element error:', e);
+                                                }}
+                                            />
+                                            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                                You
+                                            </div>
+                                            <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse" title="Camera Active"></div>
+                                            {cameraDevices.length > 1 && !isCameraLoading && (
+                                                <button
+                                                    onClick={() => setShowCameraSettings(!showCameraSettings)}
+                                                    className="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/80 rounded transition-colors"
+                                                    title="Camera Settings"
+                                                >
+                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="w-48 h-36 bg-gray-800 rounded-lg border-2 border-gray-600 shadow-lg flex items-center justify-center">
+                                            <div className="text-center text-gray-400">
+                                                <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364L18.364 5.636" />
+                                                </svg>
+                                                <div className="text-xs">Camera Off</div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Camera Settings Dropdown */}
+                                    {showCameraSettings && cameraDevices.length > 1 && (
+                                        <div className="absolute top-full left-0 mt-2 w-64 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-30">
+                                            <div className="p-3 border-b border-gray-600">
+                                                <h3 className="text-sm font-medium text-white">Camera Settings</h3>
+                                                {isCameraLoading && (
+                                                    <div className="text-xs text-blue-400 mt-1">Switching camera...</div>
+                                                )}
+                                            </div>
+                                            <div className="p-3 space-y-2">
+                                                {cameraDevices.map((device) => (
+                                                    <button
+                                                        key={device.deviceId}
+                                                        onClick={() => {
+                                                            if (!isCameraLoading) {
+                                                                switchCamera(device.deviceId);
+                                                                setShowCameraSettings(false);
+                                                            }
+                                                        }}
+                                                        disabled={isCameraLoading}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${isCameraLoading
+                                                            ? 'text-gray-500 cursor-not-allowed'
+                                                            : 'text-white hover:bg-gray-700'
+                                                            }`}
+                                                    >
+                                                        {device.label || `Camera ${device.deviceId.slice(0, 8)}...`}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Camera Error Display */}
+                                    {cameraError && (
+                                        <div className="absolute top-full left-0 mt-2 w-64 bg-red-800 border border-red-600 rounded-lg shadow-lg z-30">
+                                            <div className="p-3">
+                                                <div className="flex items-start space-x-2">
+                                                    <svg className="w-5 h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                    </svg>
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-medium text-red-200">Camera Error</div>
+                                                        <div className="text-xs text-red-300 mt-1">{cameraError}</div>
+                                                        <button
+                                                            onClick={clearError}
+                                                            className="text-xs text-red-200 hover:text-white mt-2 underline"
+                                                        >
+                                                            Dismiss
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* Virtual Environment Controls */}
                             <div className="absolute top-4 right-4 flex flex-col space-y-2">
@@ -153,18 +292,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                 </button>
                             </div>
 
-                            {/* Lesson Progress Bar */}
-                            <div className="absolute bottom-20 left-4 right-4">
-                                <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-3">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm font-medium">Lesson Progress</span>
-                                        <span className="text-sm text-gray-300">34% Complete</span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-2">
-                                        <div className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full" style={{ width: '34%' }}></div>
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* Bottom Control Bar */}
@@ -194,14 +322,19 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                     </button>
 
                                     <button
-                                        onClick={() => setIsVideoOn(!isVideoOn)}
-                                        className={`p-3 rounded-lg transition-colors ${!isVideoOn
-                                            ? 'bg-red-500 hover:bg-red-600'
-                                            : 'bg-gray-600 hover:bg-gray-500'
+                                        onClick={toggleCamera}
+                                        className={`p-3 rounded-lg transition-colors ${isCameraLoading
+                                            ? 'bg-blue-500 cursor-wait'
+                                            : !isVideoOn
+                                                ? 'bg-red-500 hover:bg-red-600'
+                                                : 'bg-gray-600 hover:bg-gray-500'
                                             }`}
-                                        title={isVideoOn ? "Turn Off Video" : "Turn On Video"}
+                                        title={isCameraLoading ? "Starting Camera..." : isVideoOn ? "Turn Off Video" : "Turn On Video"}
+                                        disabled={!isCameraSupported || isCameraLoading}
                                     >
-                                        {isVideoOn ? (
+                                        {isCameraLoading ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                        ) : isVideoOn ? (
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
@@ -224,7 +357,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                     </div>
                                 </div>
 
-                                {/* Center - AI Educator Interaction */}
+                                {/* Center - Chat Input */}
                                 <div className="flex items-center space-x-4 max-w-md flex-1 mx-4">
                                     <div className="relative flex-1">
                                         <input
@@ -232,7 +365,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                                 ? 'focus:ring-red-500 border-2 border-red-500/50'
                                                 : 'focus:ring-blue-500'
                                                 }`}
-                                            placeholder={isVoiceActive ? "🎤 Listening... or type here" : "Ask your AI educator..."}
+                                            placeholder={isVoiceActive ? "🎤 Listening... or type here" : "Type your message..."}
                                             ref={input}
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -252,7 +385,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                         className={`px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors ${loading || message ? "cursor-not-allowed opacity-50" : ""
                                             }`}
                                     >
-                                        {loading ? "..." : "Ask"}
+                                        {loading ? "..." : "Send"}
                                     </button>
                                 </div>
 
@@ -279,7 +412,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                     </button>
 
                                     <button className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors">
-                                        Leave Class
+                                        Leave Meeting
                                     </button>
                                 </div>
                             </div>
@@ -328,17 +461,17 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                 ) : (
                                     <div className="p-4 space-y-3">
                                         <div className="text-sm text-gray-400 text-center">
-                                            Class Discussion
+                                            Meeting Chat
                                         </div>
                                         {/* Chat messages would go here */}
                                         <div className="space-y-2">
                                             <div className="bg-gray-700 rounded-lg p-3">
-                                                <div className="text-xs text-gray-400 mb-1">Dr. Sarah Wilson</div>
-                                                <div className="text-sm">Welcome to today's physics lesson! We'll be exploring the fundamentals of quantum mechanics.</div>
+                                                <div className="text-xs text-gray-400 mb-1">Sarah Wilson</div>
+                                                <div className="text-sm">Welcome to the meeting! Let's get started with today's discussion.</div>
                                             </div>
                                             <div className="bg-blue-600 rounded-lg p-3 ml-8">
                                                 <div className="text-xs text-blue-200 mb-1">You</div>
-                                                <div className="text-sm">Thank you! I'm excited to learn about quantum physics.</div>
+                                                <div className="text-sm">Thank you! Looking forward to the discussion.</div>
                                             </div>
                                         </div>
                                     </div>

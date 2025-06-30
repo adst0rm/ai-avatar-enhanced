@@ -46,6 +46,11 @@ export const LandingPage = () => {
                         <span className="inline-block px-4 py-2 bg-blue-500/20 rounded-full text-blue-300 text-sm font-medium mb-4">
                             🚀 Next-Generation Learning Platform
                         </span>
+                        <div className="mt-4">
+                            <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-gray-300 text-xs font-medium">
+                                Developed at ISSAI, Nazarbayev University
+                            </span>
+                        </div>
                     </div>
 
                     <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
@@ -124,8 +129,50 @@ export const LandingPage = () => {
             {/* Footer */}
             <footer className="relative z-10 border-t border-white/10 mt-20">
                 <div className="max-w-7xl mx-auto px-6 py-12">
-                    <div className="text-center text-gray-400">
-                        <p>&copy; 2025 EduVerse. Transforming education through immersive technology. All rights reserved. Made by Adil Ergen.</p>
+                    {/* ISSAI Attribution Section */}
+                    <div className="text-center mb-8">
+                        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300">
+                            <div className="flex flex-col md:flex-row items-center justify-center mb-6">
+                                <img
+                                    src="/issai logo.png"
+                                    alt="ISSAI Logo"
+                                    className="h-20 w-auto mb-4 md:mb-0 md:mr-6 transition-transform duration-300 hover:scale-105"
+                                />
+                                <div className="text-center md:text-left">
+                                    <h3 className="text-xl font-bold text-white mb-2">
+                                        Institute of Smart Systems and Artificial Intelligence
+                                    </h3>
+                                    <p className="text-blue-300 font-semibold text-lg">Nazarbayev University</p>
+                                    <div className="flex items-center justify-center md:justify-start mt-2">
+                                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                                        <span className="text-sm text-gray-300">Research & Development</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 max-w-3xl mx-auto leading-relaxed text-lg">
+                                This project was developed within <span className="font-semibold text-blue-300">ISSAI</span> (Institute of Smart Systems and Artificial Intelligence)
+                                at <span className="font-semibold text-blue-300">Nazarbayev University</span>, advancing the frontiers of educational technology through innovative
+                                AI-powered solutions and immersive learning experiences.
+                            </p>
+                            <div className="mt-6 flex flex-wrap justify-center gap-3">
+                                <span className="px-3 py-1 bg-blue-500/20 rounded-full text-blue-300 text-sm font-medium">
+                                    Artificial Intelligence
+                                </span>
+                                <span className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-300 text-sm font-medium">
+                                    Educational Technology
+                                </span>
+                                <span className="px-3 py-1 bg-green-500/20 rounded-full text-green-300 text-sm font-medium">
+                                    Immersive Learning
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-white/10 pt-8">
+                        <div className="text-center text-gray-400">
+                            <p>&copy; 2025 EduVerse. Transforming education through immersive technology. All rights reserved.</p>
+                            <p className="mt-2 text-sm">Made by Adil Ergen | Developed at ISSAI, Nazarbayev University</p>
+                        </div>
                     </div>
                 </div>
             </footer>
