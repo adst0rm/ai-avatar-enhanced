@@ -7,12 +7,23 @@ const ChatContext = createContext();
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
+
+    // Enhanced educational context
+    const educationalContext = {
+      message,
+      context: "virtual_classroom",
+      role: "ai_educator",
+      subject: "physics_quantum_mechanics",
+      lesson_progress: 34,
+      student_level: "intermediate"
+    };
+
     const data = await fetch(`${backendUrl}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify(educationalContext),
     });
     const resp = (await data.json()).messages;
     setMessages((messages) => [...messages, ...resp]);
@@ -21,9 +32,13 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
-  const [cameraZoomed, setCameraZoomed] = useState(true);
+  const [cameraZoomed, setCameraZoomed] = useState(false);
+  const [currentLesson, setCurrentLesson] = useState("Introduction to Quantum Physics");
+  const [lessonProgress, setLessonProgress] = useState(34);
   const onMessagePlayed = () => {
     setMessages((messages) => messages.slice(1));
+    // Update lesson progress when message is played
+    setLessonProgress(prev => Math.min(prev + 5, 100));
   };
 
   useEffect(() => {
@@ -43,6 +58,10 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        currentLesson,
+        setCurrentLesson,
+        lessonProgress,
+        setLessonProgress,
       }}
     >
       {children}

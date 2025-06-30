@@ -1,19 +1,18 @@
-import { Loader } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
-import { Leva } from "leva";
-import { Experience } from "./components/Experience";
-import { UI } from "./components/UI";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { LandingPage } from "./components/LandingPage";
+import { ClassroomPage } from "./components/ClassroomPage";
+import { ChatProvider } from "./hooks/useChat";
 
 function App() {
   return (
-    <>
-      <Loader />
-      <Leva hidden />
-      <UI />
-      <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
-        <Experience />
-      </Canvas>
-    </>
+    <ChatProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/classroom" element={<ClassroomPage />} />
+        </Routes>
+      </Router>
+    </ChatProvider>
   );
 }
 
