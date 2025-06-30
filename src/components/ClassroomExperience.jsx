@@ -43,18 +43,18 @@ const Dots = (props) => {
 
 const Whiteboard = () => {
     return (
-        <group position={[0, 1.5, -2]}>
-            {/* Whiteboard surface */}
-            <Plane args={[3, 2]} position={[0, 0, 0]}>
+        <group position={[0, 1.5, -2.5]}>
+            {/* Whiteboard surface - made larger to serve as avatar background */}
+            <Plane args={[4, 3]} position={[0, 0, 0]}>
                 <meshLambertMaterial color="white" />
             </Plane>
             {/* Frame */}
-            <Box args={[3.1, 2.1, 0.05]} position={[0, 0, -0.025]}>
+            <Box args={[4.1, 3.1, 0.05]} position={[0, 0, -0.025]}>
                 <meshLambertMaterial color="#333" />
             </Box>
             {/* Content on whiteboard */}
             <Text
-                position={[0, 0.5, 0.01]}
+                position={[0, 0.8, 0.01]}
                 fontSize={0.15}
                 color="black"
                 anchorX="center"
@@ -64,7 +64,7 @@ const Whiteboard = () => {
                 Physics: Quantum Mechanics
             </Text>
             <Text
-                position={[0, 0.1, 0.01]}
+                position={[0, 0.4, 0.01]}
                 fontSize={0.08}
                 color="blue"
                 anchorX="center"
@@ -73,13 +73,22 @@ const Whiteboard = () => {
                 E = hf
             </Text>
             <Text
-                position={[0, -0.2, 0.01]}
+                position={[0, 0, 0.01]}
                 fontSize={0.08}
                 color="red"
                 anchorX="center"
                 anchorY="middle"
             >
                 Wave-Particle Duality
+            </Text>
+            <Text
+                position={[0, -0.4, 0.01]}
+                fontSize={0.07}
+                color="green"
+                anchorX="center"
+                anchorY="middle"
+            >
+                ψ(x,t) = Ae^(i(kx-ωt))
             </Text>
         </group>
     );
