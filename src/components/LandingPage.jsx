@@ -27,7 +27,7 @@ export const LandingPage = () => {
                             </svg>
                         </div>
                         <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                            EduVerse
+                            ISSAI Avatar
                         </span>
                     </div>
                     <div className="hidden md:flex space-x-8">
