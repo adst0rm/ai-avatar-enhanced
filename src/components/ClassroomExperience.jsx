@@ -179,7 +179,7 @@ const ClassroomLighting = () => {
     );
 };
 
-export const ClassroomExperience = () => {
+export const ClassroomExperience = ({ userAvatar }) => {
     const cameraControls = useRef();
     const { cameraZoomed } = useChat();
 
@@ -201,59 +201,30 @@ export const ClassroomExperience = () => {
     return (
         <>
             <CameraControls ref={cameraControls} />
-            {/* Classroom lighting and environment */}
-            <ClassroomLighting />
             <Environment preset="city" />
+            <ContactShadows opacity={0.4} scale={5} blur={2.4} />
 
-            {/* Classroom structure */}
-            <ClassroomFloor />
+            <ClassroomLighting />
             <ClassroomWalls />
-            <Whiteboard />
+            <ClassroomFloor />
             <ClassroomDesks />
+            <Whiteboard />
 
-            {/* AI Educator Avatar positioned at the front of the class */}
-            <group position={[0, 0, -1]} scale={[1, 1, 1]}>
+            {/* AI Teacher Avatar */}
+            <Avatar position={[0, 0, -1]} scale={1} />
+
+            {/* Student Avatar */}
+            <group position={[0, 0, 2]}>
                 <Suspense fallback={null}>
-                    <Dots position-y={1.75} position-x={-0.02} />
+                    <primitive
+                        object={useGLTF(userAvatar).scene}
+                        scale={1}
+                        position={[0, 0, 0]}
+                    />
                 </Suspense>
-                <Avatar />
-                <ContactShadows opacity={0.7} scale={3} position={[0, 0, 0]} />
             </group>
 
-            {/* Additional classroom elements */}
-            <group position={[2, 1, -2]}>
-                <Text
-                    fontSize={0.1}
-                    color="darkgreen"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    Today's Agenda:
-                    {"\n"}• Wave Functions
-                    {"\n"}• Uncertainty Principle
-                    {"\n"}• Quantum Entanglement
-                </Text>
-            </group>
-
-            {/* Virtual students (placeholder spheres) */}
-            <group>
-                <mesh position={[-1.5, 1, 1]}>
-                    <sphereGeometry args={[0.15]} />
-                    <meshLambertMaterial color="#FFB6C1" />
-                </mesh>
-                <mesh position={[1.5, 1, 1]}>
-                    <sphereGeometry args={[0.15]} />
-                    <meshLambertMaterial color="#87CEEB" />
-                </mesh>
-                <mesh position={[-1.5, 1, 2.5]}>
-                    <sphereGeometry args={[0.15]} />
-                    <meshLambertMaterial color="#98FB98" />
-                </mesh>
-                <mesh position={[1.5, 1, 2.5]}>
-                    <sphereGeometry args={[0.15]} />
-                    <meshLambertMaterial color="#F0E68C" />
-                </mesh>
-            </group>
+            <Dots position={[0.4, 1.8, -1]} />
         </>
     );
 }; 

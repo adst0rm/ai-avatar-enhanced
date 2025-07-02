@@ -111,7 +111,7 @@ export function Avatar(props) {
     "/models/64f1a714fe61576b46f27ca2.glb"
   );
 
-  const { message, onMessagePlayed, chat } = useChat();
+  const { message, onMessagePlayed, chat, language } = useChat();
 
   const [lipsync, setLipsync] = useState();
 
@@ -124,11 +124,26 @@ export function Avatar(props) {
     setAnimation(message.animation);
     setFacialExpression(message.facialExpression);
     setLipsync(message.lipsync);
-    const audio = new Audio("data:audio/mp3;base64," + message.audio);
-    audio.play();
-    setAudio(audio);
-    audio.onended = onMessagePlayed;
-  }, [message]);
+
+    // Handle messages with and without audio
+    if (message.audio) {
+      const audio = new Audio("data:audio/mp3;base64," + message.audio);
+      audio.play();
+      setAudio(audio);
+      audio.onended = onMessagePlayed;
+    } else {
+      // For text-only responses (fallback), auto-advance after reading time
+      const wordsPerMinute = 150; // Average reading speed
+      const words = message.text.split(' ').length;
+      const readingTimeMs = (words / wordsPerMinute) * 60 * 1000;
+      const minDisplayTime = 3000; // Minimum 3 seconds
+      const displayTime = Math.max(readingTimeMs, minDisplayTime);
+
+      setTimeout(() => {
+        onMessagePlayed();
+      }, displayTime);
+    }
+  }, [message, onMessagePlayed]);
 
   const { animations } = useGLTF("/models/animations.glb");
 
@@ -166,7 +181,7 @@ export function Avatar(props) {
             set({
               [target]: value,
             });
-          } catch (e) {}
+          } catch (e) { }
         }
       }
     });
@@ -225,7 +240,7 @@ export function Avatar(props) {
   });
 
   useControls("FacialExpressions", {
-    chat: button(() => chat()),
+    chat: button(() => chat("Test from development controls", language)),
     winkLeft: button(() => {
       setWinkLeft(true);
       setTimeout(() => setWinkLeft(false), 300);
@@ -257,7 +272,7 @@ export function Avatar(props) {
         }
         const value =
           nodes.EyeLeft.morphTargetInfluences[
-            nodes.EyeLeft.morphTargetDictionary[key]
+          nodes.EyeLeft.morphTargetDictionary[key]
           ];
         if (value > 0.01) {
           emotionValues[key] = value;

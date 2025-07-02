@@ -70,7 +70,7 @@ export const useVoiceRecognition = () => {
 
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'en-US';
+        recognition.lang = 'kk-KZ';
         recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {

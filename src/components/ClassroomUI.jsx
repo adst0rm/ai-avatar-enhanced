@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
 import { useCamera } from "../hooks/useCamera";
 import { VoiceRecognition } from "./VoiceRecognition";
+import { OpenAIVoiceRecognition } from "./OpenAIVoiceRecognition";
 
-export const ClassroomUI = ({ hidden, ...props }) => {
+export const ClassroomUI = ({ hidden, userInfo, ...props }) => {
     const input = useRef();
-    const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+    const { chat, loading, cameraZoomed, setCameraZoomed, message, setLanguage } = useChat();
     const {
         isVideoOn,
         hasPermission,
@@ -26,12 +27,21 @@ export const ClassroomUI = ({ hidden, ...props }) => {
     const [showChat, setShowChat] = useState(true);
     const [isVoiceActive, setIsVoiceActive] = useState(false);
     const [showCameraSettings, setShowCameraSettings] = useState(false);
+    const [useOpenAI, setUseOpenAI] = useState(true); // Toggle between OpenAI and browser STT
     const voiceRecognitionRef = useRef();
+
+    // Get user's selected language, default to Kazakh
+    const userLanguage = userInfo?.language || 'kk';
+
+    // Set the language in chat context when component loads
+    useEffect(() => {
+        setLanguage(userLanguage);
+    }, [userLanguage, setLanguage]);
 
     const sendMessage = (text = null) => {
         const messageText = text || input.current.value;
         if (!loading && !message && messageText.trim()) {
-            chat(messageText.trim());
+            chat(messageText.trim(), userLanguage); // Pass language to chat
             if (input.current) {
                 input.current.value = "";
             }
@@ -50,7 +60,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
 
     const handleAutoSend = (transcript) => {
         if (transcript.trim()) {
-            // Automatically send voice messages after silence
+            // Automatically send voice messages after silence with language
             sendMessage(transcript);
         }
     };
@@ -97,10 +107,8 @@ export const ClassroomUI = ({ hidden, ...props }) => {
     }
 
     const participants = [
-        { id: 1, name: "Sarah Wilson", role: "Host", avatar: "👩‍💼", isOnline: true },
-        { id: 2, name: "Alex Chen", role: "Participant", avatar: "👨‍💻", isOnline: true },
-        { id: 3, name: "Maria Garcia", role: "Participant", avatar: "👩‍💻", isOnline: true },
-        { id: 4, name: "James Kim", role: "Participant", avatar: "👨‍💼", isOnline: false },
+        { id: 1, name: userInfo?.name || "Anonymous", role: "Host", avatar: "👨‍🎓", isOnline: true },
+        { id: 2, name: "AI Teacher", role: "Teacher", avatar: "🤖", isOnline: true },
     ];
 
     return (
@@ -118,7 +126,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                             <span className="font-bold">ISSAI Avatar</span>
                         </Link>
                         <div className="text-gray-300">
-                            <span className="text-sm">Video Conference</span>
+                            <span className="text-sm">{userInfo?.class || "General"} Class</span>
                         </div>
                     </div>
 
@@ -169,7 +177,7 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                                 }}
                                             />
                                             <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                                                You
+                                                {userInfo?.name || "You"}
                                             </div>
                                             <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-pulse" title="Camera Active"></div>
                                             {cameraDevices.length > 1 && !isCameraLoading && (
@@ -345,15 +353,33 @@ export const ClassroomUI = ({ hidden, ...props }) => {
                                         )}
                                     </button>
 
-                                    {/* Voice Recognition Controls */}
-                                    <div className="border-l border-gray-600 pl-4 ml-4">
-                                        <VoiceRecognition
-                                            ref={voiceRecognitionRef}
-                                            onTranscript={handleVoiceTranscript}
-                                            onAutoSend={handleAutoSend}
-                                            isActive={isVoiceActive}
-                                            onToggle={handleVoiceToggle}
-                                        />
+                                    {/* Voice Recognition Component */}
+                                    <div className="flex items-center">
+                                        {useOpenAI ? (
+                                            <OpenAIVoiceRecognition
+                                                ref={voiceRecognitionRef}
+                                                onTranscript={handleVoiceTranscript}
+                                                onAutoSend={handleAutoSend}
+                                                onToggle={handleVoiceToggle}
+                                                language={userLanguage}
+                                            />
+                                        ) : (
+                                            <VoiceRecognition
+                                                ref={voiceRecognitionRef}
+                                                onTranscript={handleVoiceTranscript}
+                                                onAutoSend={handleAutoSend}
+                                                onToggle={handleVoiceToggle}
+                                            />
+                                        )}
+
+                                        {/* STT Method Toggle */}
+                                        <button
+                                            onClick={() => setUseOpenAI(!useOpenAI)}
+                                            className="ml-2 px-2 py-1 text-xs bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
+                                            title={useOpenAI ? 'Switch to Browser STT' : 'Switch to OpenAI STT'}
+                                        >
+                                            {useOpenAI ? 'OpenAI' : 'Browser'}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -391,6 +417,18 @@ export const ClassroomUI = ({ hidden, ...props }) => {
 
                                 {/* Right Controls */}
                                 <div className="flex items-center space-x-4">
+                                    {/* Test Message Button */}
+                                    <button
+                                        onClick={() => {
+                                            console.log('Test button clicked');
+                                            chat("Test message - can you hear me?", userLanguage);
+                                        }}
+                                        className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-xs rounded-lg transition-colors"
+                                        title="Test Avatar Response"
+                                    >
+                                        Test AI
+                                    </button>
+
                                     <button
                                         onClick={() => setShowParticipants(!showParticipants)}
                                         className="p-3 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"

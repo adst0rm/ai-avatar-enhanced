@@ -69,7 +69,7 @@ export const LandingPage = () => {
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
                         <Link
-                            to="/classroom"
+                            to="/pre-conference"
                             className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
                         >
                             <span className="relative z-10">Start Learning Now</span>
