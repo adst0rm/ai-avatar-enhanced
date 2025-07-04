@@ -12,6 +12,8 @@ import { useChat } from "../hooks/useChat";
 import { Avatar } from "./Avatar";
 import * as THREE from "three";
 
+
+
 const Dots = (props) => {
     const { loading } = useChat();
     const [loadingText, setLoadingText] = useState("");
@@ -166,14 +168,14 @@ const ClassroomLighting = () => {
                 shadow-mapSize-height={2048}
             />
             <pointLight position={[0, 5, 0]} intensity={0.8} />
-            {/* Additional lighting for AI educator */}
+            {/* Additional lighting for main avatar */}
             <spotLight
                 position={[0, 4, 2]}
                 angle={0.3}
                 penumbra={0.1}
                 intensity={1}
                 castShadow
-                target-position={[0, 1.5, -1]}
+                target-position={[0, 1.5, 0]}
             />
         </>
     );
@@ -184,17 +186,17 @@ export const ClassroomExperience = ({ userAvatar }) => {
     const { cameraZoomed } = useChat();
 
     useEffect(() => {
-        // Set initial camera position for classroom view - focused on AI educator
-        cameraControls.current.setLookAt(0, 1.8, 4, 0, 1.5, -1);
+        // Set initial camera position for classroom view - focused on main avatar
+        cameraControls.current.setLookAt(0, 2, 5, 0, 1.5, 0);
     }, []);
 
     useEffect(() => {
         if (cameraZoomed) {
-            // Zoom in to educator for close interaction
-            cameraControls.current.setLookAt(0, 1.5, 1.5, 0, 1.5, -1, true);
+            // Zoom in to avatar for close interaction
+            cameraControls.current.setLookAt(0, 1.5, 1.5, 0, 1.5, 0, true);
         } else {
             // Full classroom view with avatar in focus
-            cameraControls.current.setLookAt(0, 1.8, 4, 0, 1.5, -1, true);
+            cameraControls.current.setLookAt(0, 2.2, 5, 0, 1.0, 0, true);
         }
     }, [cameraZoomed]);
 
@@ -207,24 +209,22 @@ export const ClassroomExperience = ({ userAvatar }) => {
             <ClassroomLighting />
             <ClassroomWalls />
             <ClassroomFloor />
-            <ClassroomDesks />
-            <Whiteboard />
 
-            {/* AI Teacher Avatar */}
-            <Avatar position={[0, 0, -1]} scale={1} />
+            {/* Main Avatar (Selected by User) */}
+            <Suspense fallback={
+                <mesh position={[0, 0.85, 0]}>
+                    <boxGeometry args={[0.4, 1.7, 0.3]} />
+                    <meshLambertMaterial color="#4A90E2" />
+                </mesh>
+            }>
+                <Avatar
+                    modelPath={userAvatar}
+                    position={[0, 0, 0]}
+                    scale={1}
+                />
+            </Suspense>
 
-            {/* Student Avatar */}
-            <group position={[0, 0, 2]}>
-                <Suspense fallback={null}>
-                    <primitive
-                        object={useGLTF(userAvatar).scene}
-                        scale={1}
-                        position={[0, 0, 0]}
-                    />
-                </Suspense>
-            </group>
-
-            <Dots position={[0.4, 1.8, -1]} />
+            <Dots position={[0.4, 1.8, 0]} />
         </>
     );
 }; 

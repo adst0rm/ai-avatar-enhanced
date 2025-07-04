@@ -4,8 +4,10 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 
 const avatarOptions = [
-    { id: 1, name: 'Avatar 1', path: '/models/64f1a714fe61576b46f27ca2.glb' },
-    { id: 2, name: 'Avatar 2', path: '/models/64f1a714fe61576b46f27ca3.glb' },
+    { id: 1, name: 'Classic Avatar', path: '/models/64f1a714fe61576b46f27ca2.glb' },
+    { id: 2, name: 'Modern Avatar', path: '/models/64f1a714fe61576b46f27ca3.glb' },
+    { id: 3, name: 'Asyl Avatar', path: '/models/asyl-avatar.glb' },
+    { id: 4, name: 'Tomiris Avatar', path: '/models/tomitis-avatar.glb' },
 ];
 
 // Preload all models
@@ -163,21 +165,27 @@ export const PreConferencePage = () => {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
                                     Choose Your Avatar
                                 </label>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3">
                                     {avatarOptions.map((avatar) => (
                                         <button
                                             key={avatar.id}
                                             type="button"
                                             onClick={() => handleAvatarChange(avatar.path)}
-                                            className={`p-2 border rounded-lg transition-all ${formData.selectedAvatar === avatar.path
-                                                ? 'border-blue-500 bg-blue-500/20'
-                                                : 'border-white/10 hover:border-white/30'
+                                            className={`p-3 border rounded-xl transition-all duration-300 text-sm font-medium ${formData.selectedAvatar === avatar.path
+                                                ? 'border-blue-500 bg-blue-500/20 text-blue-300 shadow-lg shadow-blue-500/25'
+                                                : 'border-white/10 hover:border-white/30 text-gray-300 hover:text-white hover:bg-white/5'
                                                 }`}
                                         >
-                                            {avatar.name}
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <div className={`w-2 h-2 rounded-full ${formData.selectedAvatar === avatar.path ? 'bg-blue-400' : 'bg-gray-500'}`}></div>
+                                                <span>{avatar.name}</span>
+                                            </div>
                                         </button>
                                     ))}
                                 </div>
+                                <p className="text-xs text-gray-400 mt-2">
+                                    Your selected avatar will appear in the virtual classroom
+                                </p>
                             </div>
 
                             {/* Submit Button */}

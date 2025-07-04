@@ -106,10 +106,8 @@ const corresponding = {
 
 let setupMode = false;
 
-export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF(
-    "/models/64f1a714fe61576b46f27ca2.glb"
-  );
+export function Avatar({ modelPath = "/models/64f1a714fe61576b46f27ca2.glb", ...props }) {
+  const { nodes, materials, scene } = useGLTF(modelPath);
 
   const { message, onMessagePlayed, chat, language } = useChat();
 
@@ -194,7 +192,8 @@ export function Avatar(props) {
   const [audio, setAudio] = useState();
 
   useFrame(() => {
-    !setupMode &&
+    // Check if the model has the expected eye nodes for morphing
+    if (!setupMode && nodes.EyeLeft && nodes.EyeLeft.morphTargetDictionary) {
       Object.keys(nodes.EyeLeft.morphTargetDictionary).forEach((key) => {
         const mapping = facialExpressions[facialExpression];
         if (key === "eyeBlinkLeft" || key === "eyeBlinkRight") {
@@ -207,8 +206,9 @@ export function Avatar(props) {
         }
       });
 
-    lerpMorphTarget("eyeBlinkLeft", blink || winkLeft ? 1 : 0, 0.5);
-    lerpMorphTarget("eyeBlinkRight", blink || winkRight ? 1 : 0, 0.5);
+      lerpMorphTarget("eyeBlinkLeft", blink || winkLeft ? 1 : 0, 0.5);
+      lerpMorphTarget("eyeBlinkRight", blink || winkRight ? 1 : 0, 0.5);
+    }
 
     // LIPSYNC
     if (setupMode) {
@@ -266,43 +266,47 @@ export function Avatar(props) {
     }),
     logMorphTargetValues: button(() => {
       const emotionValues = {};
-      Object.keys(nodes.EyeLeft.morphTargetDictionary).forEach((key) => {
-        if (key === "eyeBlinkLeft" || key === "eyeBlinkRight") {
-          return; // eyes wink/blink are handled separately
-        }
-        const value =
-          nodes.EyeLeft.morphTargetInfluences[
-          nodes.EyeLeft.morphTargetDictionary[key]
-          ];
-        if (value > 0.01) {
-          emotionValues[key] = value;
-        }
-      });
+      if (nodes.EyeLeft && nodes.EyeLeft.morphTargetDictionary) {
+        Object.keys(nodes.EyeLeft.morphTargetDictionary).forEach((key) => {
+          if (key === "eyeBlinkLeft" || key === "eyeBlinkRight") {
+            return; // eyes wink/blink are handled separately
+          }
+          const value =
+            nodes.EyeLeft.morphTargetInfluences[
+            nodes.EyeLeft.morphTargetDictionary[key]
+            ];
+          if (value > 0.01) {
+            emotionValues[key] = value;
+          }
+        });
+      }
       console.log(JSON.stringify(emotionValues, null, 2));
     }),
   });
 
   const [, set] = useControls("MorphTarget", () =>
-    Object.assign(
-      {},
-      ...Object.keys(nodes.EyeLeft.morphTargetDictionary).map((key) => {
-        return {
-          [key]: {
-            label: key,
-            value: 0,
-            min: nodes.EyeLeft.morphTargetInfluences[
-              nodes.EyeLeft.morphTargetDictionary[key]
-            ],
-            max: 1,
-            onChange: (val) => {
-              if (setupMode) {
-                lerpMorphTarget(key, val, 1);
-              }
+    nodes.EyeLeft && nodes.EyeLeft.morphTargetDictionary
+      ? Object.assign(
+        {},
+        ...Object.keys(nodes.EyeLeft.morphTargetDictionary).map((key) => {
+          return {
+            [key]: {
+              label: key,
+              value: 0,
+              min: nodes.EyeLeft.morphTargetInfluences[
+                nodes.EyeLeft.morphTargetDictionary[key]
+              ],
+              max: 1,
+              onChange: (val) => {
+                if (setupMode) {
+                  lerpMorphTarget(key, val, 1);
+                }
+              },
             },
-          },
-        };
-      })
-    )
+          };
+        })
+      )
+      : {}
   );
 
   useEffect(() => {
@@ -320,71 +324,100 @@ export function Avatar(props) {
     return () => clearTimeout(blinkTimeout);
   }, []);
 
+  // Check if this is a ReadyPlayerMe style avatar or a generic one
+  const hasSpecificNodes = nodes.Hips && nodes.Wolf3D_Body && nodes.EyeLeft;
+
   return (
     <group {...props} dispose={null} ref={group}>
-      <primitive object={nodes.Hips} />
-      <skinnedMesh
-        name="Wolf3D_Body"
-        geometry={nodes.Wolf3D_Body.geometry}
-        material={materials.Wolf3D_Body}
-        skeleton={nodes.Wolf3D_Body.skeleton}
-      />
-      <skinnedMesh
-        name="Wolf3D_Outfit_Bottom"
-        geometry={nodes.Wolf3D_Outfit_Bottom.geometry}
-        material={materials.Wolf3D_Outfit_Bottom}
-        skeleton={nodes.Wolf3D_Outfit_Bottom.skeleton}
-      />
-      <skinnedMesh
-        name="Wolf3D_Outfit_Footwear"
-        geometry={nodes.Wolf3D_Outfit_Footwear.geometry}
-        material={materials.Wolf3D_Outfit_Footwear}
-        skeleton={nodes.Wolf3D_Outfit_Footwear.skeleton}
-      />
-      <skinnedMesh
-        name="Wolf3D_Outfit_Top"
-        geometry={nodes.Wolf3D_Outfit_Top.geometry}
-        material={materials.Wolf3D_Outfit_Top}
-        skeleton={nodes.Wolf3D_Outfit_Top.skeleton}
-      />
-      <skinnedMesh
-        name="Wolf3D_Hair"
-        geometry={nodes.Wolf3D_Hair.geometry}
-        material={materials.Wolf3D_Hair}
-        skeleton={nodes.Wolf3D_Hair.skeleton}
-      />
-      <skinnedMesh
-        name="EyeLeft"
-        geometry={nodes.EyeLeft.geometry}
-        material={materials.Wolf3D_Eye}
-        skeleton={nodes.EyeLeft.skeleton}
-        morphTargetDictionary={nodes.EyeLeft.morphTargetDictionary}
-        morphTargetInfluences={nodes.EyeLeft.morphTargetInfluences}
-      />
-      <skinnedMesh
-        name="EyeRight"
-        geometry={nodes.EyeRight.geometry}
-        material={materials.Wolf3D_Eye}
-        skeleton={nodes.EyeRight.skeleton}
-        morphTargetDictionary={nodes.EyeRight.morphTargetDictionary}
-        morphTargetInfluences={nodes.EyeRight.morphTargetInfluences}
-      />
-      <skinnedMesh
-        name="Wolf3D_Head"
-        geometry={nodes.Wolf3D_Head.geometry}
-        material={materials.Wolf3D_Skin}
-        skeleton={nodes.Wolf3D_Head.skeleton}
-        morphTargetDictionary={nodes.Wolf3D_Head.morphTargetDictionary}
-        morphTargetInfluences={nodes.Wolf3D_Head.morphTargetInfluences}
-      />
-      <skinnedMesh
-        name="Wolf3D_Teeth"
-        geometry={nodes.Wolf3D_Teeth.geometry}
-        material={materials.Wolf3D_Teeth}
-        skeleton={nodes.Wolf3D_Teeth.skeleton}
-        morphTargetDictionary={nodes.Wolf3D_Teeth.morphTargetDictionary}
-        morphTargetInfluences={nodes.Wolf3D_Teeth.morphTargetInfluences}
-      />
+      {hasSpecificNodes ? (
+        <>
+          {/* ReadyPlayerMe style avatar */}
+          <primitive object={nodes.Hips} />
+          {nodes.Wolf3D_Body && (
+            <skinnedMesh
+              name="Wolf3D_Body"
+              geometry={nodes.Wolf3D_Body.geometry}
+              material={materials.Wolf3D_Body}
+              skeleton={nodes.Wolf3D_Body.skeleton}
+            />
+          )}
+          {nodes.Wolf3D_Outfit_Bottom && (
+            <skinnedMesh
+              name="Wolf3D_Outfit_Bottom"
+              geometry={nodes.Wolf3D_Outfit_Bottom.geometry}
+              material={materials.Wolf3D_Outfit_Bottom}
+              skeleton={nodes.Wolf3D_Outfit_Bottom.skeleton}
+            />
+          )}
+          {nodes.Wolf3D_Outfit_Footwear && (
+            <skinnedMesh
+              name="Wolf3D_Outfit_Footwear"
+              geometry={nodes.Wolf3D_Outfit_Footwear.geometry}
+              material={materials.Wolf3D_Outfit_Footwear}
+              skeleton={nodes.Wolf3D_Outfit_Footwear.skeleton}
+            />
+          )}
+          {nodes.Wolf3D_Outfit_Top && (
+            <skinnedMesh
+              name="Wolf3D_Outfit_Top"
+              geometry={nodes.Wolf3D_Outfit_Top.geometry}
+              material={materials.Wolf3D_Outfit_Top}
+              skeleton={nodes.Wolf3D_Outfit_Top.skeleton}
+            />
+          )}
+          {nodes.Wolf3D_Hair && (
+            <skinnedMesh
+              name="Wolf3D_Hair"
+              geometry={nodes.Wolf3D_Hair.geometry}
+              material={materials.Wolf3D_Hair}
+              skeleton={nodes.Wolf3D_Hair.skeleton}
+            />
+          )}
+          {nodes.EyeLeft && (
+            <skinnedMesh
+              name="EyeLeft"
+              geometry={nodes.EyeLeft.geometry}
+              material={materials.Wolf3D_Eye}
+              skeleton={nodes.EyeLeft.skeleton}
+              morphTargetDictionary={nodes.EyeLeft.morphTargetDictionary}
+              morphTargetInfluences={nodes.EyeLeft.morphTargetInfluences}
+            />
+          )}
+          {nodes.EyeRight && (
+            <skinnedMesh
+              name="EyeRight"
+              geometry={nodes.EyeRight.geometry}
+              material={materials.Wolf3D_Eye}
+              skeleton={nodes.EyeRight.skeleton}
+              morphTargetDictionary={nodes.EyeRight.morphTargetDictionary}
+              morphTargetInfluences={nodes.EyeRight.morphTargetInfluences}
+            />
+          )}
+          {nodes.Wolf3D_Head && (
+            <skinnedMesh
+              name="Wolf3D_Head"
+              geometry={nodes.Wolf3D_Head.geometry}
+              material={materials.Wolf3D_Skin}
+              skeleton={nodes.Wolf3D_Head.skeleton}
+              morphTargetDictionary={nodes.Wolf3D_Head.morphTargetDictionary}
+              morphTargetInfluences={nodes.Wolf3D_Head.morphTargetInfluences}
+            />
+          )}
+          {nodes.Wolf3D_Teeth && (
+            <skinnedMesh
+              name="Wolf3D_Teeth"
+              geometry={nodes.Wolf3D_Teeth.geometry}
+              material={materials.Wolf3D_Teeth}
+              skeleton={nodes.Wolf3D_Teeth.skeleton}
+              morphTargetDictionary={nodes.Wolf3D_Teeth.morphTargetDictionary}
+              morphTargetInfluences={nodes.Wolf3D_Teeth.morphTargetInfluences}
+            />
+          )}
+        </>
+      ) : (
+        // Generic avatar fallback - render the entire scene
+        <primitive object={scene} />
+      )}
     </group>
   );
 }
