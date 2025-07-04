@@ -3,7 +3,7 @@ import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 
 import { forwardRef, useImperativeHandle } from 'react';
 
-export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive, onToggle }, ref) => {
+export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive, onToggle, language = 'kk' }, ref) => {
     const {
         isListening,
         transcript,
@@ -22,7 +22,7 @@ export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive
         pauseListening,
         resumeListening,
         forceStop,
-    } = useVoiceRecognition();
+    } = useVoiceRecognition(language);
 
     // Expose control methods through ref
     useImperativeHandle(ref, () => ({
@@ -175,20 +175,28 @@ export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive
                                     style={{ height: `${4 + volumeIntensity * 14}px` }}
                                 ></div>
                             </div>
-                            <span className="text-xs text-red-400 font-medium">Listening...</span>
+                            <span className="text-xs text-red-400 font-medium">
+                                {language === 'kk' ? 'Тыңдап жатыр...' : 'Listening...'}
+                            </span>
                         </>
                     )}
                     {!isListening && hasPermission && !isPaused && (
-                        <span className="text-xs text-gray-400">Voice ready</span>
+                        <span className="text-xs text-gray-400">
+                            {language === 'kk' ? 'Дауыс дайын' : 'Voice ready'}
+                        </span>
                     )}
                     {isPaused && (
                         <div className="flex items-center space-x-1">
                             <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-                            <span className="text-xs text-orange-400">Paused (AI responding)</span>
+                            <span className="text-xs text-orange-400">
+                                {language === 'kk' ? 'Үзілген (AI жауап беруде)' : 'Paused (AI responding)'}
+                            </span>
                         </div>
                     )}
                     {!hasPermission && (
-                        <span className="text-xs text-yellow-400">Mic permission needed</span>
+                        <span className="text-xs text-yellow-400">
+                            {language === 'kk' ? 'Микрофон рұқсаты қажет' : 'Mic permission needed'}
+                        </span>
                     )}
                 </div>
 
@@ -226,7 +234,9 @@ export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive
                 {autoSendEnabled && isListening && (
                     <div className="mt-1 flex items-center space-x-1">
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-green-400">Auto-send: 2s silence</span>
+                        <span className="text-xs text-green-400">
+                            {language === 'kk' ? 'Автоматты жіберу: 2с үн жоқ' : 'Auto-send: 2s silence'}
+                        </span>
                     </div>
                 )}
 
@@ -237,7 +247,7 @@ export const VoiceRecognition = forwardRef(({ onTranscript, onAutoSend, isActive
                             onClick={resumeListening}
                             className="px-2 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
                         >
-                            Resume
+                            {language === 'kk' ? 'Жалғастыру' : 'Resume'}
                         </button>
                     </div>
                 )}

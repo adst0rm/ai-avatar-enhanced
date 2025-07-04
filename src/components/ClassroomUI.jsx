@@ -369,6 +369,7 @@ export const ClassroomUI = ({ hidden, userInfo, ...props }) => {
                                                 onTranscript={handleVoiceTranscript}
                                                 onAutoSend={handleAutoSend}
                                                 onToggle={handleVoiceToggle}
+                                                language={userLanguage}
                                             />
                                         )}
 

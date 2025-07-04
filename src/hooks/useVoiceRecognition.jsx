@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useVoiceRecognition = () => {
+export const useVoiceRecognition = (language = 'kk') => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
@@ -24,6 +24,18 @@ export const useVoiceRecognition = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         setIsSupported(!!SpeechRecognition && !!navigator.mediaDevices?.getUserMedia);
     }, []);
+
+    // Reinitialize recognition when language changes
+    useEffect(() => {
+        if (recognitionRef.current) {
+            // Stop current recognition if running
+            if (isListening) {
+                recognitionRef.current.stop();
+            }
+            // Clear the reference so it gets reinitialized with new language
+            recognitionRef.current = null;
+        }
+    }, [language]);
 
     // Initialize audio analysis for volume visualization
     const initializeAudioAnalysis = useCallback(async () => {
@@ -70,7 +82,7 @@ export const useVoiceRecognition = () => {
 
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'kk-KZ';
+        recognition.lang = language === 'kk' ? 'kk-KZ' : 'en-US';
         recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {
@@ -132,7 +144,7 @@ export const useVoiceRecognition = () => {
         };
 
         return recognition;
-    }, [isSupported]);
+    }, [isSupported, language]);
 
     const startListening = useCallback(async () => {
         if (!isSupported) {
