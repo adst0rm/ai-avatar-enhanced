@@ -43,6 +43,7 @@ const AvatarPreview = ({ modelPath }) => {
 };
 
 const classOptions = [
+    'Free Format',
     'Mathematics',
     'Physics',
     'Chemistry',
